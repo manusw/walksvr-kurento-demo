@@ -38,3 +38,6 @@ jspm_packages
 
 # Mac crap
 .DS_Store
+
+# Bower
+client/bower_components/

@@ -4,7 +4,9 @@
   "description": "demo of video chat using kurento media server and webRTC for walksVR",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "cd client && bower install"
   },
   "repository": {
     "type": "git",
@@ -15,5 +17,12 @@
   "bugs": {
     "url": "https://github.com/mochuelo-kun/walksvr-kurento-demo/issues"
   },
-  "homepage": "https://github.com/mochuelo-kun/walksvr-kurento-demo#readme"
+  "homepage": "https://github.com/mochuelo-kun/walksvr-kurento-demo#readme",
+  "dependencies": {
+    "bower": "^1.4.1",
+    "express": "~4.12.4",
+    "minimist": "^1.1.1",
+    "ws": "~1.0.1",
+    "kurento-client": "6.6.0"
+  }
 }

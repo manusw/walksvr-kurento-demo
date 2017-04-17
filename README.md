@@ -30,3 +30,8 @@ Kurento can be deployed using the docker definition in this repo, but it may be 
 STUN (or TURN) may need to be enabled if you are deploying to a cloud service in this case (see kurento docs).
 
 Also remember to change the `server.js` `as_uri` and `ws_uri` variables to whatever your new signaling and media server IPs/Ports are.
+
+--
+
+## Note on Deploying
+To run the server in the background (so it keeps running even when the terminal running node is closed), use `npm run go-live` instead of `npm start`. To stop a server started in this way, use `npm run kill-live`.

@@ -26,6 +26,7 @@
     "forever": "^0.15.3",
     "kurento-client": "6.6.0",
     "minimist": "^1.1.1",
+    "videojs-vr": "^0.3.4",
     "ws": "~1.0.1"
   }
 }

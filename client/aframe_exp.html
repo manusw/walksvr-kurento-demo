@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <!-- <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /> -->
+
+    <title>360 Video</title>
+    <meta name="description" content="360 Video — A-Frame">
+    <script src="https://aframe.io/releases/0.5.0/aframe.js"></script>
+
+    <script>
+      function start () {
+        var videoDOM = document.getElementById('video');
+        console.log("starting video...");
+        console.log(videoDOM);
+        videoDOM.play();
+      }
+      function pause () {
+        var videoDOM = document.getElementById('video');
+        console.log("pausing video...");
+        console.log(videoDOM);
+        videoDOM.pause();
+      }
+    </script>
+
+  </head>
+  <body>
+    <a-scene>
+
+      <a-assets>
+        <!-- <video id="video" src="https://ucarecdn.com/bcece0a8-86ce-460e-856b-40dac4875f15/"
+               loop crossorigin playsinline webkit-playsinline></video> -->
+        <!-- <video id="video" src="media/R0010215.MP4"
+               autoplay loop crossorigin></video> -->
+        <!-- <video  src="media/theta1.m4v" -->
+        <video  src="media/R0010215.MP4"
+                id="video"
+                preload="auto"
+                autoplay
+                loop
+                controls
+                crossorigin
+                playsinline
+                webkit-playsinline></video>
+      </a-assets>
+
+      <!-- <a-videosphere src="#video" rotation="0 180 0"></a-videosphere> -->
+      <!-- <a-videosphere src="#video" rotation="0 0 0"></a-videosphere> -->
+      <!-- <a-videosphere  src="#video"
+                      rotation="0 0 0"
+                      material=""></a-videosphere> -->
+
+      <a-entity rotation="0 90 0">
+        <a-camera></a-camera>
+      </a-entity>
+
+    </a-scene>
+
+
+    <div  id="runBtns"
+          style="position: absolute;
+                 top: 0px;
+                 left: 4px;
+                 background-color: #fcfcfc;
+                 opacity: 0.9;
+                 padding: 2px;
+                 visibility: hidden;">
+      <button type='button' id='startBtn'>start</button>
+      <button type='button' id='stopBtn'>pause</button>
+    </div>
+
+  <script type="text/javascript">
+      var aFrameScene = document.querySelector("a-scene");
+      var videoDOM = document.getElementById("video");
+
+      // ##############################################
+      // ############### experiment! ##################
+      // ##############################################
+      var threeScene = aFrameScene.object3D;
+      function _cyln2world(a, e) {
+        return (new THREE.Vector3(
+          Math.cos(e) * Math.cos(a),
+          Math.cos(e) * Math.sin(a),
+          Math.sin(e)));
+      }
+
+      function _world2fish(x, y, z) {
+        let nz = z;
+        if (z < -1.0) nz = -1.0;
+        else if (z > 1.0) nz = 1.0;
+        return (new THREE.Vector2(
+          Math.atan2(y, x),
+          Math.acos(nz) / Math.PI)); // 0.0 to 1.0
+      }
+
+      function _calcTexUv(i, j, lens) {
+        const world = this._cyln2world(
+          ((i + 90) / 180.0 - 1.0) * Math.PI, // rotate 90 deg for polygon
+          (0.5 - j / 180.0) * Math.PI);
+        const ar = this._world2fish(
+          Math.sin(-0.5 * Math.PI) * world.z + Math.cos(-0.5 * Math.PI) * world.x,
+          world.y,
+          Math.cos(-0.5 * Math.PI) * world.z - Math.sin(-0.5 * Math.PI) * world.x);
+
+        const fishRad = 0.883;
+        const fishRad2 = fishRad * 0.88888888888888;
+        const fishCenter = 1.0 - 0.44444444444444;
+        const x = (lens === 0) ?
+          fishRad * ar.y * Math.cos(ar.x) * 0.5 + 0.25 :
+          fishRad * (1.0 - ar.y) * Math.cos(-1.0 * ar.x + Math.PI) * 0.5 + 0.75;
+        const y = (lens === 0) ?
+          fishRad2 * ar.y * Math.sin(ar.x) + fishCenter :
+          fishRad2 * (1.0 - ar.y) * Math.sin(-1.0 * ar.x + Math.PI) + fishCenter;
+        return (new THREE.Vector2(x, y));
+      }
+
+      function _createGeometry() {
+        const geometry = new THREE.Geometry();
+
+        const uvs = [];
+        for (let j = 0; j <= 180; j += 5) {
+          for (let i = 0; i <= 360; i += 5) {
+            geometry.vertices.push(new THREE.Vector3(
+              Math.sin(Math.PI * j / 180.0) * Math.sin(Math.PI * i / 180.0) * 500.0,
+              Math.cos(Math.PI * j / 180.0) * 500.0,
+              Math.sin(Math.PI * j / 180.0) * Math.cos(Math.PI * i / 180.0) * 500.0));
+          }
+          /* devide texture */
+          for (let k = 0; k <= 180; k += 5) {
+            uvs.push(this._calcTexUv(k, j, 0));
+          }
+          for (let l = 180; l <= 360; l += 5) {
+            uvs.push(this._calcTexUv(l, j, 1));
+          }
+        }
+
+        for (let m = 0; m < 36; m++) {
+          for (let n = 0; n < 72; n++) {
+            const v = m * 73 + n;
+            geometry.faces.push(
+              new THREE.Face3(v + 0, v + 1, v + 73, null, null, 0),
+              new THREE.Face3(v + 1, v + 74, v + 73, null, null, 0));
+            const t = (n < 36) ? m * 74 + n : m * 74 + n + 1;
+
+            geometry.faceVertexUvs[0].push(
+              [uvs[t + 0], uvs[t + 1], uvs[t + 74]], [uvs[t + 1], uvs[t + 75], uvs[t + 74]]);
+          }
+        }
+        geometry.scale(-1, 1, 1); // rotate left-right
+        return geometry;
+      }
+
+      function _createMaterial(video) { // video:DOM
+        const texture = new THREE.VideoTexture(video);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        return new THREE.MeshBasicMaterial({
+          map: texture,
+          side: THREE.BackSide,
+        });
+      }
+
+      // add to scene!
+      threeScene.add(new THREE.Mesh(_createGeometry(), _createMaterial(videoDOM)));
+      // ##############################################
+
+
+      // ##############################################
+      // ##### fixing autoload problem on mobile ######
+      // ##############################################
+      if (aFrameScene.hasLoaded) {
+        run();
+      } else {
+        aFrameScene.addEventListener("loaded", run);
+      }
+
+      function run () {
+        document.getElementById("runBtns").style.visibility = 'visible';
+
+        document.getElementById("startBtn")
+          .addEventListener("click", function (e) {
+            console.log("user says play!");
+            videoDOM.play();
+            console.log("THREE data in normal start:");
+            console.log(THREE);
+          });
+        document.getElementById("stopBtn")
+          .addEventListener("click", function (e) {
+            console.log("user says paaaaause!");
+            videoDOM.pause();
+          });
+
+        aFrameScene.querySelector(".a-enter-vr-button")
+          .addEventListener("click", function (e) {
+            console.log("VR Mode entered.");
+            console.log("Playing video automatically...");
+            // this.style.display = "none";
+            videoDOM.play();
+            console.log("THREE data in VR mode:");
+            console.log(THREE);
+        }, false);
+      }
+      // ##############################################
+
+  </script>
+
+  </body>
+</html>

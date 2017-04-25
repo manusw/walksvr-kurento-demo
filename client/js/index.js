@@ -19,9 +19,30 @@ var ws = new WebSocket('wss://' + location.host + '/one2many');
 var video;
 var webRtcPeer;
 
+//hax 
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+
 window.onload = function() {
-	console = new Console();
-	video = document.getElementById('video');
+	// console = new Console();
+
+	THETA_GL.init(/* divId */ 'containerthing', /* autoResuze */ true,  /* debug */ false);
+	navigator.getUserMedia({video: true},
+        function(stream) {
+          // cameraStream = stream;
+          // cameraURL = window.URL.createObjectURL(stream);
+          THETA_GL.setVideoSrc(window.URL.createObjectURL(stream));
+          THETA_GL.startAnimate();
+        },
+        function(err) {
+          console.error('getUserMedia Error:', err);
+        }
+      );
+
+	video = document.getElementById('theta-video');
+
+	// video = document.getElementById('video');
+	// video = document.getElementById('video_html5_api');
 
 	document.getElementById('call').addEventListener('click', function() { presenter(); } );
 	document.getElementById('viewer').addEventListener('click', function() { viewer(); } );
@@ -56,7 +77,7 @@ ws.onmessage = function(message) {
 
 function presenterResponse(message) {
 	if (message.response != 'accepted') {
-		var errorMsg = message.message ? message.message : 'Unknow error';
+		var errorMsg = message.message ? message.message : 'Unknown error';
 		console.warn('Call not accepted for the following reason: ' + errorMsg);
 		dispose();
 	} else {
@@ -66,7 +87,7 @@ function presenterResponse(message) {
 
 function viewerResponse(message) {
 	if (message.response != 'accepted') {
-		var errorMsg = message.message ? message.message : 'Unknow error';
+		var errorMsg = message.message ? message.message : 'Unknown error';
 		console.warn('Call not accepted for the following reason: ' + errorMsg);
 		dispose();
 	} else {
@@ -76,18 +97,32 @@ function viewerResponse(message) {
 
 function presenter() {
 	if (!webRtcPeer) {
-		showSpinner(video);
+		// showSpinner(video);
 
 		var options = {
 			localVideo: video,
-			onicecandidate : onIceCandidate
+			onicecandidate : onIceCandidate,
+			mediaConstraints: {
+				audio: true,
+				video: true
+			}
 	    }
 
 		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(options, function(error) {
 			if(error) return onError(error);
 
 			this.generateOffer(onOfferPresenter);
+			
+			// theta addition
+			console.log("this:",this);
+			console.log("localVideo:", this.localVideo);
+			console.log("videoStream:", this.videoStream);
+			// THETA_GL.setVideoSrc(this.localVideo.src);
+			// debugger;
+			THETA_GL.startAnimate();
+			THETA_GL.followOrientation(false);
 		});
+
 	}
 }
 
@@ -103,7 +138,7 @@ function onOfferPresenter(error, offerSdp) {
 
 function viewer() {
 	if (!webRtcPeer) {
-		showSpinner(video);
+		// showSpinner(video);
 
 		var options = {
 			remoteVideo: video,
@@ -114,6 +149,9 @@ function viewer() {
 			if(error) return onError(error);
 
 			this.generateOffer(onOfferViewer);
+			// theta addition
+			THETA_GL.startAnimate();
+			THETA_GL.followOrientation(true);
 		});
 	}
 }
@@ -153,7 +191,9 @@ function dispose() {
 		webRtcPeer.dispose();
 		webRtcPeer = null;
 	}
-	hideSpinner(video);
+	// hideSpinner(video);
+	// add theta stuff
+	THETA_GL.stopVideoSrc();
 }
 
 function sendMessage(message) {
